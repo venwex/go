@@ -8,8 +8,8 @@ type Task struct {
 
 func NewTask(id int, title string) Task {
 	return Task{
-		ID: id,
+		ID:    id,
 		Title: title,
-		Done: false,
+		Done:  false,
 	}
 }
