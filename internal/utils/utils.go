@@ -46,6 +46,18 @@ func DecodeTask(r *http.Request) (string, error) {
 	return title.Title, nil
 }
 
+func DecodeUser(r *http.Request) (m.User, error) {
+	var user m.User
+
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		log.Println("error during decoding json")
+		return m.User{}, err
+	}
+
+	return user, nil
+}
+
 func RenderError(w http.ResponseWriter, status int, text string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
