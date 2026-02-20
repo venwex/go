@@ -40,6 +40,8 @@ func buildHandler(db *postgres.Dialect) *handlers.Handlers {
 func setUpRoutes(h *handlers.Handlers) http.Handler {
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("GET /health", h.Task.HandleHealth)
+
 	mux.HandleFunc("GET /tasks", h.Task.HandleGetTasks)
 	mux.HandleFunc("POST /tasks", h.Task.HandlePostTask)
 	mux.HandleFunc("PATCH /tasks", h.Task.HandlePatchTask)

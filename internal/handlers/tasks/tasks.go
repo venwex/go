@@ -121,3 +121,9 @@ func (h *TaskHandler) HandleDeleteTask(w http.ResponseWriter, r *http.Request) {
 
 	u.RenderJSON(w, http.StatusOK, task)
 }
+
+func (h *TaskHandler) HandleHealth(w http.ResponseWriter, r *http.Request) {
+	u.RenderJSON(w, http.StatusOK, H{
+		"healthy": true,
+	})
+}
