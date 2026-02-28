@@ -10,6 +10,7 @@ import (
 	"example/test/internal/service"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -26,7 +27,8 @@ func Run() {
 	mux := setUpRoutes(h)      // handlers
 
 	handler := m.AuthMiddleware(m.LoggingMiddleware("message")(mux))
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	log.Println("Starting server...")
+	log.Fatal(http.ListenAndServe(":8000", handler))
 }
 
 func buildHandler(db *postgres.Dialect) *handlers.Handlers {
@@ -58,12 +60,19 @@ func setUpRoutes(h *handlers.Handlers) http.Handler {
 
 func InitPostgresConfig() *config.PostgresConfig {
 	return &config.PostgresConfig{
-		Host:        "localhost",
-		Port:        "5433",
-		Username:    "postgres",
-		Password:    "secret",
-		DBName:      "gopgtest",
-		SSLMode:     "disable",
+		Host:        getEnv("DB_HOST", "localhost"),
+		Port:        getEnv("DB_PORT", "5432"),
+		Username:    getEnv("DB_USER", "postgres"),
+		Password:    getEnv("DB_PASSWORD", "secret"),
+		DBName:      getEnv("DB_NAME", "postgres"),
+		SSLMode:     getEnv("DB_SSLMODE", "disable"),
 		ExecTimeout: 5 * time.Second,
 	}
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }
