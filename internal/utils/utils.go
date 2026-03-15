@@ -66,3 +66,34 @@ func RenderError(w http.ResponseWriter, status int, text string) {
 		log.Println("error during encoding an error")
 	}
 }
+
+func ParseUserQuery(r *http.Request) m.UserQuery {
+	q := r.URL.Query()
+
+	page := 1
+	pageSize := 10 // by default pagination is 10
+
+	if p, err := strconv.Atoi(q.Get("page")); err == nil && p > 0 {
+		page = p
+	}
+
+	if ps, err := strconv.Atoi(q.Get("page_size")); err == nil && ps > 0 {
+		pageSize = ps
+	}
+
+	return m.UserQuery{
+		Page:     page,
+		PageSize: pageSize,
+
+		Filters: m.UserFilters{
+			Name:   q.Get("name"),
+			Email:  q.Get("email"),
+			Gender: q.Get("gender"),
+		},
+
+		Sorting: m.UserSorting{
+			OrderBy:  q.Get("order_by"),
+			OrderDir: q.Get("order_dir"),
+		},
+	}
+}

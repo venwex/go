@@ -13,8 +13,8 @@ func NewService(repo repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) ServiceGetUsers() ([]m.User, error) {
-	return s.repo.GetUsers()
+func (s *UserService) ServiceGetUsers(query m.UserQuery) (m.PaginatedResponse, error) {
+	return s.repo.GetUsers(query)
 }
 
 func (s *UserService) ServiceGetUser(id int) (m.User, error) {
@@ -31,4 +31,8 @@ func (s *UserService) ServiceUpdateUser(id int, name, email string) (m.User, err
 
 func (s *UserService) ServiceDeleteUser(id int) (m.User, error) {
 	return s.repo.DeleteUser(id)
+}
+
+func (s *UserService) ServiceGetCommonFriends(u1, u2 int) ([]m.User, error) {
+	return s.repo.GetCommonFriends(u1, u2)
 }

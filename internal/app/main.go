@@ -50,10 +50,12 @@ func setUpRoutes(h *handlers.Handlers) http.Handler {
 	mux.HandleFunc("DELETE /tasks", h.Task.HandleDeleteTask)
 
 	mux.HandleFunc("GET /users/{id}", h.User.HandleGetUserById)
-	mux.HandleFunc("GET /users", h.User.HandleGetUsers) // get all users
+	mux.HandleFunc("GET /users", h.User.HandleGetUsers) // get all users by pagination, filtering and sorting
 	mux.HandleFunc("POST /users", h.User.HandleCreateUser)
 	mux.HandleFunc("PATCH /users/{id}", h.User.HandleUpdateUser)  // update specific user
 	mux.HandleFunc("DELETE /users/{id}", h.User.HandleDeleteUser) // delete specific user
+
+	mux.HandleFunc("GET /common", h.User.CommonFriends) // get common friends
 
 	return mux
 }

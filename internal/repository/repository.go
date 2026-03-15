@@ -8,11 +8,12 @@ import (
 )
 
 type UserRepository interface {
-	GetUsers() ([]m.User, error)
+	GetUsers(query m.UserQuery) (m.PaginatedResponse, error)
 	GetUserByID(id int) (m.User, error)
 	CreateUser(user m.User) (m.User, error)
 	UpdateUser(id int, name, email string) (m.User, error)
 	DeleteUser(id int) (m.User, error)
+	GetCommonFriends(u1, u2 int) ([]m.User, error)
 }
 
 type TaskRepository interface {
