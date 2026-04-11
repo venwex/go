@@ -40,6 +40,10 @@ func buildHandler(db *postgres.Dialect) *handlers.Handlers {
 }
 
 func setUpRoutes(h *handlers.Handlers) http.Handler {
+	limiter := &m.RateLimiter{
+		Requests: make(map[string]int),
+	}
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", h.Task.HandleHealth)
@@ -55,7 +59,13 @@ func setUpRoutes(h *handlers.Handlers) http.Handler {
 	mux.HandleFunc("PATCH /users/{id}", h.User.HandleUpdateUser)  // update specific user
 	mux.HandleFunc("DELETE /users/{id}", h.User.HandleDeleteUser) // delete specific user
 
-	mux.HandleFunc("GET /common", h.User.CommonFriends) // get common friends
+	mux.HandleFunc("POST /users/sign-up", h.User.SignUp)
+	mux.HandleFunc("POST /users/sign-in", h.User.SignIn)
+	mux.Handle("GET /users/protected/hello", m.JWTAuthMiddleware(http.HandlerFunc(h.User.ProtectedHello)))
+	mux.Handle("GET /users/getme", m.JWTAuthMiddleware(limiter.LimitMiddleware(http.HandlerFunc(h.User.GetMe)))) // task 3: rate limiter
+	mux.Handle("PATCH /users/promote/{id}", m.JWTAuthMiddleware(m.RoleMiddleware("user", http.HandlerFunc(h.User.PromoteUser))))
+	mux.Handle("GET /users/admin", m.JWTAuthMiddleware(m.RoleMiddleware("admin", http.HandlerFunc(h.User.Admin)))) // only admin can access
+	mux.HandleFunc("GET /common", h.User.CommonFriends)                                                            // get common friends
 
 	return mux
 }

@@ -3,10 +3,12 @@ package users
 import (
 	"example/test/internal/service/users"
 	u "example/test/internal/utils"
+	"log"
 	"net/http"
 	"strconv"
 )
 
+type H map[string]any
 type UserHandler struct {
 	Users *users.UserService
 }
@@ -152,4 +154,100 @@ func (h *UserHandler) CommonFriends(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u.RenderJSON(w, http.StatusOK, users)
+}
+
+func (h *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
+	user, err := u.DecodeUser(r)
+	if err != nil {
+		u.RenderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	hashedPassword, err := u.HashPassword(user.Password)
+	if err != nil {
+		u.RenderError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	user.Password = hashedPassword
+	user.Role = "user"
+
+	createdUser, sessionId, err := h.Users.RegisterUser(user)
+	if err != nil {
+		u.RenderError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	u.RenderJSON(w, http.StatusOK, H{
+		"message":   "user created successfully",
+		"sessionId": sessionId,
+		"user":      createdUser,
+	})
+}
+
+func (h *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
+	login, err := u.DecodeLogin(r)
+	if err != nil {
+		u.RenderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	token, err := h.Users.SignIn(login)
+	if err != nil {
+		u.RenderError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	u.RenderJSON(w, http.StatusOK, H{
+		"token": token,
+	})
+}
+
+func (h *UserHandler) ProtectedHello(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID")
+	role := r.Context().Value("role")
+
+	u.RenderJSON(w, http.StatusOK, H{
+		"message": "OK",
+		"user_id": userID,
+		"role":    role,
+	})
+}
+
+var jwtSecret = []byte("super-secret-key")
+
+func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(int)
+
+	user, err := h.Users.ServiceGetUser(userID)
+	if err != nil {
+		u.RenderError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	u.RenderJSON(w, http.StatusOK, H{
+		"user": user,
+	})
+}
+
+func (h *UserHandler) PromoteUser(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, _ := strconv.Atoi(idStr)
+
+	err := h.Users.PromoteUser(id)
+	if err != nil {
+		log.Printf("error promoting user: %v, path: %v", err, r.URL.Path)
+		u.RenderError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	u.RenderJSON(w, http.StatusOK, H{
+		"message": "user promoted",
+	})
+}
+
+func (h *UserHandler) Admin(w http.ResponseWriter, r *http.Request) {
+	u.RenderJSON(w, http.StatusOK, H{
+		"message": "Access for admin endpoint is successful",
+	})
 }

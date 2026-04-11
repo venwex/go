@@ -7,6 +7,10 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
+
+	"github.com/golang-jwt/jwt/v4"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type H map[string]any
@@ -96,4 +100,32 @@ func ParseUserQuery(r *http.Request) m.UserQuery {
 			OrderDir: q.Get("order_dir"),
 		},
 	}
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes), err
+}
+
+func DecodeLogin(r *http.Request) (m.LoginUserDTO, error) {
+	var input m.LoginUserDTO
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		log.Println("error during decoding json")
+		return m.LoginUserDTO{}, err
+	}
+
+	return input, nil
+}
+
+var jwtSecret = []byte("super-secret-key")
+
+func GenerateJWT(userID int, role string) (string, error) {
+	claims := jwt.MapClaims{
+		"user_id": userID,
+		"role":    role,
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtSecret)
 }

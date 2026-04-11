@@ -14,6 +14,8 @@ type UserRepository interface {
 	UpdateUser(id int, name, email string) (m.User, error)
 	DeleteUser(id int) (m.User, error)
 	GetCommonFriends(u1, u2 int) ([]m.User, error)
+	GetUserByEmail(email string) (m.User, error)
+	PromoteUser(id int) error
 }
 
 type TaskRepository interface {

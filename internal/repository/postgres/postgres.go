@@ -4,6 +4,7 @@ import (
 	"errors"
 	"example/test/internal/config"
 	"fmt"
+	"log"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -22,7 +23,7 @@ func NewDialect(cfg *config.PostgresConfig) *Dialect {
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
-		panic(err)
+		log.Fatalf("cant connect to db: %v", err)
 	}
 
 	err = db.Ping()

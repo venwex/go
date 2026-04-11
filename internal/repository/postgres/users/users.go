@@ -135,10 +135,15 @@ func (r *UserRepository) GetUserByID(id int) (m.User, error) {
 
 func (r *UserRepository) CreateUser(user m.User) (m.User, error) {
 	err := r.db.DB.Get(&user, `
-		INSERT INTO users (name, email)
-		VALUES ($1, $2)
-		RETURNING id, name, email, created_at, updated_at`,
-		user.Name, user.Email,
+		INSERT INTO users (name, email, password, gender, birth_date, role)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id, name, gender, email, password, role, birth_date, created_at, updated_at`,
+		user.Name,
+		user.Email,
+		user.Password,
+		user.Gender,
+		user.BirthDate,
+		user.Role,
 	)
 	if err != nil {
 		return m.User{}, err
@@ -234,4 +239,21 @@ func (r *UserRepository) GetCommonFriends(u1, u2 int) ([]m.User, error) {
 	}
 
 	return users, nil
+}
+
+func (r *UserRepository) GetUserByEmail(email string) (m.User, error) {
+	var user m.User
+
+	err := r.db.DB.Get(&user, "SELECT * FROM users WHERE email = $1", email)
+
+	return user, err
+}
+
+func (r *UserRepository) PromoteUser(id int) error {
+	_, err := r.db.DB.Exec(
+		`UPDATE users SET role = 'admin' WHERE id = $1`,
+		id,
+	)
+
+	return err
 }
